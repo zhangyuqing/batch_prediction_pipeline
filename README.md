@@ -1,1 +1,1 @@
-# batch_prediction_pipeline
+Influence of batch effect and adjustment on prediction model performances

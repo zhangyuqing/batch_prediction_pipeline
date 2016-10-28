@@ -1,6 +1,8 @@
 rm(list=ls())
-#setwd("C:/Users/zhang/Dropbox/Work/EvanJohnson/12_refine_pipeline/")
-setwd("~/simPipe_v2/")
+#setwd("C:/Users/zhang/Dropbox/Work/EvanJohnson/13_realdata_101816/batch_prediction_pipeline/")
+setwd("~/simPipe_v3/")
+
+#load("../command_args.RData")
 
 source("scripts/modStats_new.R")
 source("scripts/baseDat.R")
@@ -9,61 +11,83 @@ source("scripts/adjBatch.R")
 source("scripts/prediction_mods.R")
 
 
-############ Read in parameters ###########
+
+######################## Set Parameters ########################
 command_args <- commandArgs(trailingOnly=TRUE)
-if (length(command_args) != 12){
-  print("ERROR: Submit the correct options!")
-  print("Rscript 
-        <add batch effect to baseline (TRUE/FALSE)> <difference between batch (mean/var)> 
-        <batch adjust: separate/combined/none> <ComBat mod: mod/null/none> 
-        <train size> <test size> 
-        <10x percentage of cases in train> < 10x percentage of cases in test>
-        <10x percentage of case in batch 1> < 10x percentage of control in batch 1> 
-        <10x percentage of case in batch 3> < 10x percentage of control in batch 3>")
-  quit(save = "no", status = 1, runLast = FALSE)
-}
+if (length(command_args) < 16){print("ERROR: At least 16 parameters!"); quit(save = "no", status = 1, runLast = FALSE)}
 
-
-
-############ Set Parameters ############
 
 #### Baseline Datasets Parameters ####
-# gene distribution
-on_mean <- 7.5 # mean expression when genes are "on"
-off_mean <- 7 # mean expression when genes are "off"
-on_var <- 1.8 # variance expression when genes are "on"
-off_var <- 1.8 # variance expression when genes are "on"
-# number of samples
-n_sample_trn <- as.numeric(command_args[5]) # number of samples in the training set
-n_sample_tst <- as.numeric(command_args[6]) # number of samples in the test set
-p_trn_case <- as.numeric(command_args[7])/10
-p_tst_case <- as.numeric(command_args[8])/10
+
 # number of genes
-n_genes <- 600 # numberof genes
-n_on <- 100 # number of biomarkers
+n_genes <- as.numeric(command_args[1]) # 600 # numberof genes
+n_on <- as.numeric(command_args[2]) # 100 # number of biomarkers
+
+# gene distribution
+on_mean <- as.numeric(command_args[3]) # 7.5 # mean expression when genes are "on"
+off_mean <- as.numeric(command_args[4]) # 7 # mean expression when genes are "off"
+on_var <- as.numeric(command_args[5]) # 1.8 # variance expression when genes are "on"
+off_var <- as.numeric(command_args[6]) # 1.8 # variance expression when genes are "on"
+
+# number of samples
+n_sample_train <- as.numeric(command_args[7]) # 200 # number of samples in the training set
+n_case_train <- as.numeric(command_args[8]) 
+n_control_train <- n_sample_train - n_case_train
+n_sample_test <- as.numeric(command_args[9]) # 200 # number of samples in the test set
+n_case_test <- as.numeric(command_args[10])
+n_control_test <- n_sample_test - n_case_test
+
 
 #### Batch Parameters ####
-# balanced/unbalanced design
-p_batch1_case <- as.numeric(command_args[9])/10  #batch 1 has p_batch1_case/100 percent of the train cases
-p_batch1_control <- as.numeric(command_args[10])/10 #batch 1 has p_batch1_control/100 percent of the train controls
-p_batch3_case <- as.numeric(command_args[11])/10 #batch 3 has p_batch3_case/100 percent of the test cases
-p_batch3_control <- as.numeric(command_args[12])/10 #batch 3 has p_batch3_control/100 percent of the test controls
-# the sum of pcase and pcontrol close to 1 => size balance, otherwise not balanced
-withBatch <- as.logical(command_args[1]) # add batch effect to baseline data?
-## mean or variance difference
-batch_meanvar_arg <- command_args[2]
+# add batch effect to baseline data? (T/F)
+withBatch <- as.logical(command_args[11]) # TRUE/FALSE
+# mean or variance difference
+batch_meanvar_arg <- command_args[12] # mean/var
+# batch adjustment 
+sep_cmb <- command_args[13] # separate/combined
+combat_mod <- command_args[14] # mod/null
 
-#### Batch Adjustment Parameters ####
-sep_cmb <- command_args[3]
-combat_mod <- command_args[4]
+# number of batches in the training and test set
+n_batch_train <- as.numeric(command_args[15]) # number of batches in the training set
+n_batch_test <- as.numeric(command_args[16]) # number of batches in the test set
+if(n_batch_train==1 || n_batch_test==1){print("ERROR: At least 2 batches within each dataset, if not 0!"); quit(save = "no", status = 1, runLast = FALSE)}
+
+if (length(command_args) != 16+2*(n_batch_train+n_batch_test)){
+  print("ERROR: Input the right parameters!")
+  #print("Usage: ")
+  quit(save = "no", status = 1, runLast = FALSE)
+}
+# number of cases and controls in each batch
+cases_batch_train <- controls_batch_train <- rep(0, n_batch_train)
+cases_batch_test <- controls_batch_test <- rep(0, n_batch_test)
+if(length(command_args) > 17){
+  new_args <- command_args[17:length(command_args)]
+  if(n_batch_train > 0){
+    case_tmp_id <- seq(from=1, to=2*n_batch_train, by=2)
+    cases_batch_train <- as.numeric(new_args[case_tmp_id])
+    controls_batch_train <- as.numeric(new_args[case_tmp_id+rep(1, n_batch_train)])
+    rm(case_tmp_id)
+  }
+  if(n_batch_test > 0){
+    case_tmp_id <- seq(from=(2*n_batch_train+1), to=length(new_args), by=2)
+    cases_batch_test <- as.numeric(new_args[case_tmp_id])
+    controls_batch_test <- as.numeric(new_args[case_tmp_id+rep(1, n_batch_test)])
+  }
+}
+# check # of samples in batches with # in training/test set
+if(n_batch_train > 0 & (sum(cases_batch_train)!=n_case_train)){print("ERROR: Cases in training set doesn't match!"); quit(save = "no", status = 1, runLast = FALSE)}
+if(n_batch_train > 0 & (sum(controls_batch_train)!=n_control_train)){print("ERROR: Controls in training set doesn't match!"); quit(save = "no", status = 1, runLast = FALSE)}
+if(n_batch_test > 0 & (sum(cases_batch_test)!=n_case_test)){print("ERROR: Cases in test set doesn't match!"); quit(save = "no", status = 1, runLast = FALSE)}
+if(n_batch_test > 0 & (sum(controls_batch_test)!=n_control_test)){print("ERROR: Controls in test set doesn't match!"); quit(save = "no", status = 1, runLast = FALSE)}  
+
 
 #### Pipeline Parameters ####
-iterations <- 100
+iterations <- 20
 set.seed(1)
 
 
 
-############ Run pipeline ############
+######################## Run pipeline ########################
 res_mat_trn <- res_mat_tst <- list()
 combatSets <- list()
 for(iter in 1:iterations){
@@ -235,5 +259,5 @@ filename_seq <- c(withBatch, batch_meanvar_arg, sep_cmb, combat_mod,
                   p_batch1_case*10, p_batch1_control*10, p_batch3_case*10, p_batch3_control*10)
 save(res_mat_tst, res_mat_trn,
      #baseSets, baseBatchSets, 
-     combatSets, batchInfo,
+     combatSets, batchInfo, command_args,
      file=paste("results/simPipe_", paste(filename_seq, collapse= "_"), ".RData", sep=""))
