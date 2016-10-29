@@ -1,15 +1,17 @@
 rm(list=ls())
 #setwd("C:/Users/zhang/Dropbox/Work/EvanJohnson/13_realdata_101816/batch_prediction_pipeline/")
-setwd("~/simPipe_v3/")
+setwd("/restricted/projectnb/combat/batch_prediction_pipeline/")
 
 #load("../command_args.RData")
+#command_args=command_args2
+#rm(command_args1, command_args2, command_args3, command_args4)
 
 source("scripts/modStats_new.R")
 source("scripts/baseDat.R")
 source("scripts/batchDat.R")
 source("scripts/adjBatch.R")
 source("scripts/prediction_mods.R")
-
+source("scripts/helper.R")
 
 
 ######################## Set Parameters ########################
@@ -94,41 +96,38 @@ for(iter in 1:iterations){
   print(paste("SIMULATION:",iter,sep=""))
   
   #### Step 1: simulate baseline datasets ####
-  baseLst <- baseDat(n_trn=n_sample_trn, pcase_trn=p_trn_case,   
-                     n_tst=n_sample_tst, pcase_tst=p_tst_case,
+  baseLst <- baseDat(n_trn=n_sample_train, n_trn_case=n_case_train,   
+                     n_tst=n_sample_test, n_tst_case=n_case_test,
                      n_genes=n_genes, n_biomarker=n_on, 
                      on_mean=on_mean, off_mean=off_mean, on_var=on_var, off_var=off_var)
   
   
   #### Step 2: add batch effect ####
   # simulate batch matrices
-  batchLst <- batchDat(ncase_trn=baseLst$n_trn_case, nctrl_trn=baseLst$n_trn_control,
-                       ncase_tst=baseLst$n_tst_case, nctrl_tst=baseLst$n_tst_control,
-                       pcase_batch1=p_batch1_case, pctrl_batch1=p_batch1_control, 
-                       pcase_batch3=p_batch3_case, pctrl_batch3=p_batch3_control,
+  batchLst <- batchDat(n_batch_train=n_batch_train, n_batch_test=n_batch_test,
+                       cases_batch_train=cases_batch_train, controls_batch_train=controls_batch_train,
+                       cases_batch_test=cases_batch_test, controls_batch_test=controls_batch_test,
                        batch_meanvar_arg=batch_meanvar_arg, 
                        n_genes=n_genes)
-  # add to baseline data
+  # add batch matrices to baseline data
   baseBatch_Lst <- baseLst
   if(withBatch){
-    for(i in 1:2){
-      baseBatch_Lst$trn_x[, batchLst$batch_ind_trn[[i]]] <- baseLst$trn_x[, batchLst$batch_ind_trn[[i]]] + batchLst$batchMat[[i]]
-    }                       
-    for(j in 3:4){
-      baseBatch_Lst$tst_x[, batchLst$batch_ind_tst[[j-2]]] <- baseLst$tst_x[, batchLst$batch_ind_tst[[j-2]]] + batchLst$batchMat[[j]]
+    if(n_batch_train > 0){
+      for(i in 1:n_batch_train){
+        baseBatch_Lst$trn_x[, batchLst$batch_ind_trn[[i]]] <- baseLst$trn_x[, batchLst$batch_ind_trn[[i]]] + batchLst$batchMat[[i]]
+      } 
+    }
+    if(n_batch_test > 0){
+      for(j in (n_batch_train+1):(n_batch_train+n_batch_test)){
+        baseBatch_Lst$tst_x[, batchLst$batch_ind_tst[[j-n_batch_train]]] <- baseLst$tst_x[, batchLst$batch_ind_tst[[j-n_batch_train]]] + batchLst$batchMat[[j]]
+      }
     }
   }
   
   
   #### Step 3: Adjust batch with ComBat ####
-  batch_train <- rep(0, n_sample_trn); batch_test <- rep(0, n_sample_tst)
-  for(i in 1:2){
-    batch_train[batchLst$batch_ind_trn[[i]]] <- i
-  }
-  for(j in 3:4){
-    batch_test[batchLst$batch_ind_tst[[j-2]]] <- j
-  }
-  combatLst <- adjBatch(datLst=baseBatch_Lst, batch_train=batch_train, batch_test=batch_test, 
+  combatLst <- adjBatch(datLst=baseBatch_Lst, 
+                        batch_train=batchLst$batch_train, batch_test=batchLst$batch_test, 
                         sep_cmb=sep_cmb, combat_mod=combat_mod)
   
   
@@ -254,10 +253,13 @@ for(iter in 1:iterations){
   batchInfo <- batchLst
 }
 
+samples_batch_train <- conCat(cases_batch_train, controls_batch_train)
+samples_batch_test <- conCat(cases_batch_test, controls_batch_test)
 filename_seq <- c(withBatch, batch_meanvar_arg, sep_cmb, combat_mod,
-                  n_sample_trn, n_sample_tst, p_trn_case*10, p_tst_case*10,
-                  p_batch1_case*10, p_batch1_control*10, p_batch3_case*10, p_batch3_control*10)
+                  n_sample_train, n_case_train, n_sample_test, n_case_test,
+                  n_batch_train, n_batch_test,
+                  samples_batch_train, samples_batch_test)
 save(res_mat_tst, res_mat_trn,
      #baseSets, baseBatchSets, 
-     combatSets, batchInfo, command_args,
-     file=paste("results/simPipe_", paste(filename_seq, collapse= "_"), ".RData", sep=""))
+     combatSets, batchInfo, 
+     file=paste("results/", paste(filename_seq, collapse= "_"), ".RData", sep=""))

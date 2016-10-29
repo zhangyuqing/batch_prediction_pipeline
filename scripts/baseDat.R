@@ -1,12 +1,12 @@
 baseDat <- function(
   n_trn,  
   # number of individuals in the training set
-  pcase_trn, 
-  # percentage of cases (positive samples) in training set
+  n_trn_case, 
+  # number of cases (positive samples) in training set
   n_tst, 
   # number of individuals in the test set
-  pcase_tst, 
-  # percentage of cases in test set
+  n_tst_case, 
+  # number of cases in test set
   n_genes, 
   # number of genes
   n_biomarker, 
@@ -20,9 +20,7 @@ baseDat <- function(
   off_var 
   # variance when genes are "off"
 ){
-  n_trn_case <- floor(n_trn * pcase_trn) # number of cases in training set
   n_trn_control <- n_trn - n_trn_case # number of controls in training set
-  n_tst_case <- floor(n_tst * pcase_tst) # number of cases in the test set
   n_tst_control <- n_tst - n_tst_case # number of controls in the test set
   
   trn_set <- matrix(0, nrow=n_genes, ncol=n_trn)
