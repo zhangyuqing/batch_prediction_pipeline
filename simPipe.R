@@ -2,9 +2,9 @@ rm(list=ls())
 #setwd("C:/Users/zhang/Dropbox/Work/EvanJohnson/13_realdata_101816/batch_prediction_pipeline/")
 setwd("/restricted/projectnb/combat/batch_prediction_pipeline/")
 
-#load("../command_args.RData")
-#command_args=command_args2
-#rm(command_args1, command_args2, command_args3, command_args4)
+load("tests/command_args.RData")
+command_args=command_args2
+rm(command_args1, command_args2, command_args3, command_args4)
 
 source("scripts/modStats_new.R")
 source("scripts/baseDat.R")
@@ -15,7 +15,7 @@ source("scripts/helper.R")
 
 
 ######################## Set Parameters ########################
-command_args <- commandArgs(trailingOnly=TRUE)
+#command_args <- commandArgs(trailingOnly=TRUE)
 if (length(command_args) < 16){print("ERROR: At least 16 parameters!"); quit(save = "no", status = 1, runLast = FALSE)}
 
 
@@ -111,6 +111,10 @@ for(iter in 1:iterations){
                        n_genes=n_genes)
   # add batch matrices to baseline data
   baseBatch_Lst <- baseLst
+  if(n_batch_train==0 & n_batch_test==0 & withBatch){
+    print("No batch specified. setting withBatch = FALSE.")
+    withBatch=FALSE
+  }
   if(withBatch){
     if(n_batch_train > 0){
       for(i in 1:n_batch_train){
@@ -126,6 +130,10 @@ for(iter in 1:iterations){
   
   
   #### Step 3: Adjust batch with ComBat ####
+  if((!is.null(batchLst$batch_train)) & (!is.null(batchLst$batch_test))){
+    batchLst$batch_test <- batchLst$batch_test + rep(max(batchLst$batch_train), length(batchLst$batch_test))
+    names(batchLst$batch_ind_tst) <- as.numeric(names(batchLst$batch_ind_tst)) + rep(max(batchLst$batch_train), length(names(batchLst$batch_ind_tst)))
+  }
   combatLst <- adjBatch(datLst=baseBatch_Lst, 
                         batch_train=batchLst$batch_train, batch_test=batchLst$batch_test, 
                         sep_cmb=sep_cmb, combat_mod=combat_mod)
@@ -136,6 +144,11 @@ for(iter in 1:iterations){
   y_trn <- combatLst$trn_y
   tst_set <- combatLst$tst_x
   y_tst <- combatLst$tst_y
+  
+  # normalization by gene (Optional)
+  # trn_set <- t(scale(t(trn_set), center=TRUE, scale=TRUE))
+  # tst_set <- t(scale(t(tst_set), center=TRUE, scale=TRUE))
+  
   # shuffle individuals to mix up cases and controls #
   ind_trn <- sample(1:ncol(trn_set), ncol(trn_set), replace=FALSE)
   ind_tst <- sample(1:ncol(tst_set), ncol(tst_set), replace=FALSE)

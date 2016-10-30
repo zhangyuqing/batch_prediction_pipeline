@@ -55,35 +55,39 @@ batchDat <- function(
   
   ## batch mean and variances
   batch_par <- list()
-  if(batch_meanvar_arg=="mean"){
-    mu_seq <- c(-2, 1, 3, -1, 4, 2, -3, -4, 1.5, -2.5) # 10 batches maximum
+  if(length(n.batches)>0){
+    if(batch_meanvar_arg=="mean"){
+      mu_seq <- c(-2, 1, 3, -1, 4, 2, -3, -4, 1.5, -2.5, 3.5) # 11 batches maximum
+      for(i in 1:length(n.batches)){
+        batch_par[[i]] <- c(mu_seq[i], 0.1, 11, 1) # mean, sd of gaussian; alpha, beta for InvGamma
+      }
+    }else if(batch_meanvar_arg=="var"){
+      alpha_beta_seq <- list(c(102, 101), c(1602, 6404), c(8102, 72909), c(25602, 409616)) # 4 batches maximum
+      for(i in 1:length(n.batches)){
+        batch_par[[i]] <- c(0, 0.1, alpha_beta_seq[[i]]) # mean, sd of gaussian; alpha, beta for InvGamma
+      }
+    }
+  
+  
+    ## simulate parameters from hyper-pars
+    library(MCMCpack)
+    gamma <- delta2 <- list()
     for(i in 1:length(n.batches)){
-      batch_par[[i]] <- c(mu_seq[i], 0.1, 11, 1) # mean, sd of gaussian; alpha, beta for InvGamma
+      gamma[[i]] <- rnorm(n_genes, mean=batch_par[[i]][1], sd=batch_par[[i]][2])
+      delta2[[i]] <- rinvgamma(n_genes, shape=batch_par[[i]][3], scale=batch_par[[i]][4])
     }
-  }else if(batch_meanvar_arg=="var"){
-    alpha_beta_seq <- list(c(102, 101), c(1602, 6404), c(8102, 72909), c(25602, 409616)) # 4 batches maximum
+  
+  
+    ## simulate batch matrices
+    batches <- list()
     for(i in 1:length(n.batches)){
-      batch_par[[i]] <- c(0, 0.1, alpha_beta_seq[[i]]) # mean, sd of gaussian; alpha, beta for InvGamma
+      batches[[i]] <- matrix(0, nrow=n_genes, ncol=n.batches[i])
+      for(g in 1:n_genes){
+        batches[[i]][g, ] <- rnorm(n.batches[i], mean=gamma[[i]][g], sd=sqrt(delta2[[i]][g]))
+      }
     }
-  }
-  
-  
-  ## simulate parameters from hyper-pars
-  library(MCMCpack)
-  gamma <- delta2 <- list()
-  for(i in 1:length(n.batches)){
-    gamma[[i]] <- rnorm(n_genes, mean=batch_par[[i]][1], sd=batch_par[[i]][2])
-    delta2[[i]] <- rinvgamma(n_genes, shape=batch_par[[i]][3], scale=batch_par[[i]][4])
-  }
-  
-  
-  ## simulate batch matrices
-  batches <- list()
-  for(i in 1:length(n.batches)){
-    batches[[i]] <- matrix(0, nrow=n_genes, ncol=n.batches[i])
-    for(g in 1:n_genes){
-      batches[[i]][g, ] <- rnorm(n.batches[i], mean=gamma[[i]][g], sd=sqrt(delta2[[i]][g]))
-    }
+  }else{
+    batches <- list()
   }
   
   res <- list(batchMat=batches,

@@ -14,27 +14,33 @@ adjBatch <- function(
   mod_train <- model.matrix(~datLst$trn_y)
   mod_test <- model.matrix(~datLst$tst_y)
   
-  if((!is.null(batch_train)) & (!is.null(batch_test))){ #### both training and test set contain batches
+  if(!is.null(batch_train) & !is.null(batch_test)){ #### both training and test set contain batches
     if(sep_cmb=="separate"){
       if(combat_mod=="mod"){
         # step 1
+        print("Step 1: train")
         trn_set <- ComBat(datLst$trn_x, batch=batch_train, mod=mod_train)
+        print("Step 1: test")
         tst_set <- ComBat(datLst$tst_x, batch=batch_test, mod=mod_test)
         
         # step 2
-        batch_idx <- c(rep(1, ncol(trn_set)), rep(2,ncol(tst_set)))
+        print("Step 2")
+        batch_idx <- c(rep(1, ncol(trn_set)), rep(2, ncol(tst_set)))
         mod <- rbind(mod_train, mod_test); rownames(mod) <- 1:nrow(mod)
-        combined_set <- ComBat(cbind(trn_set,tst_set), batch=batch_idx, mod=mod)
+        combined_set <- ComBat(cbind(trn_set, tst_set), batch=batch_idx, mod=mod)
         datLst$trn_x <- combined_set[, 1:ncol(trn_set)]
         datLst$tst_x <- combined_set[, (ncol(trn_set)+1):(ncol(trn_set)+ncol(tst_set))]
-      }else if(combat_mod=="null"){
+      }else if(combat_mod=="null"){  ## 2-step hybrid
         # step 1
+        print("Step 1: train")
         trn_set <- ComBat(datLst$trn_x, batch=batch_train, mod=mod_train)
+        print("Step 1: test")
         tst_set <- ComBat(datLst$tst_x, batch=batch_test, mod=NULL)
         
         # step 2
+        print("Step 2")
         batch_idx <- c(rep(1, ncol(trn_set)), rep(2,ncol(tst_set)))
-        combined_set <- ComBat(cbind(trn_set,tst_set), batch=batch_idx, mod=NULL)
+        combined_set <- ComBat(cbind(trn_set, tst_set), batch=batch_idx, mod=NULL)
         datLst$trn_x <- combined_set[, 1:ncol(trn_set)]
         datLst$tst_x <- combined_set[, (ncol(trn_set)+1):(ncol(trn_set)+ncol(tst_set))]
       }
@@ -44,7 +50,7 @@ adjBatch <- function(
         batch_idx <- c(batch_train, batch_test)
         combined_set <- ComBat(cbind(datLst$trn_x, datLst$tst_x), batch=batch_idx, mod=mod)
         datLst$trn_x <- combined_set[, 1:ncol(datLst$trn_x)]
-        datLst$tst_x <- combined_set[,(ncol(datLst$trn_x)+1):(ncol(datLst$trn_x)+ncol(datLst$tst_x))]
+        datLst$tst_x <- combined_set[, (ncol(datLst$trn_x)+1):(ncol(datLst$trn_x)+ncol(datLst$tst_x))]
       }else if(combat_mod=="null"){
         batch_idx <- c(batch_train, batch_test)
         combined_set <- ComBat(cbind(datLst$trn_x, datLst$tst_x), batch=batch_idx, mod=NULL)
@@ -52,23 +58,27 @@ adjBatch <- function(
         datLst$tst_x <- combined_set[, (ncol(datLst$trn_x)+1):(ncol(datLst$trn_x)+ncol(datLst$tst_x))]
       }
     }
-  }else if(is.null(batch_test)){ #### only the training set contain batches, no batch in test set
+  }else if(!is.null(batch_train) & is.null(batch_test)){ #### only the training set contain batches, no batch in test set
     if(sep_cmb=="separate"){
       if(combat_mod=="mod"){
         # step 1
+        print("Step 1: train")
         trn_set <- ComBat(datLst$trn_x, batch=batch_train, mod=mod_train)
         
         # step 2
+        print("Step 2")
         batch_idx <- c(rep(1, ncol(datLst$trn_x)), rep(2, ncol(datLst$tst_x)))
         mod <- rbind(mod_train, mod_test); rownames(mod) <- 1:nrow(mod)
         combined_set <- ComBat(cbind(trn_set, datLst$tst_x), batch=batch_idx, mod=mod)
         datLst$trn_x <- combined_set[, 1:ncol(datLst$trn_x)]
         datLst$tst_x <- combined_set[, (ncol(datLst$trn_x)+1):(ncol(datLst$trn_x)+ncol(datLst$tst_x))]
-      }else if(combat_mod=="null"){
+      }else if(combat_mod=="null"){ ## 2-step hybrid, still adjust training set in first step
         # step 1
+        print("Step 1: train")
         trn_set <- ComBat(datLst$trn_x, batch=batch_train, mod=mod_train)
         
         # step 2
+        print("Step 2")
         batch_idx <- c(rep(1, ncol(datLst$trn_x)), rep(2, ncol(datLst$tst_x)))
         combined_set <- ComBat(cbind(trn_set, datLst$tst_x), batch=batch_idx, mod=NULL)
         datLst$trn_x <- combined_set[, 1:ncol(datLst$trn_x)]
@@ -77,24 +87,26 @@ adjBatch <- function(
     }else if(sep_cmb=="combined"){
       if(combat_mod=="mod"){
         mod <- rbind(mod_train, mod_test); rownames(mod) <- 1:nrow(mod)
-        batch_idx <- c(batch_train, rep((max(batch_train)+1), ncol(datLst$tst_x)))
+        batch_idx <- c(batch_train, rep(max(batch_train)+1, ncol(datLst$tst_x)))
         combined_set <- ComBat(cbind(datLst$trn_x, datLst$tst_x), batch=batch_idx, mod=mod)
         datLst$trn_x <- combined_set[, 1:ncol(datLst$trn_x)]
         datLst$tst_x <- combined_set[, (ncol(datLst$trn_x)+1):(ncol(datLst$trn_x)+ncol(datLst$tst_x))]
       }else if(combat_mod=="null"){
-        batch_idx <- c(batch_train, rep((max(batch_train)+1), ncol(datLst$tst_x)))
+        batch_idx <- c(batch_train, rep(max(batch_train)+1, ncol(datLst$tst_x)))
         combined_set <- ComBat(cbind(datLst$trn_x, datLst$tst_x), batch=batch_idx, mod=NULL)
         datLst$trn_x <- combined_set[, 1:ncol(datLst$trn_x)]
         datLst$tst_x <- combined_set[, (ncol(datLst$trn_x)+1):(ncol(datLst$trn_x)+ncol(datLst$tst_x))]
       }
     }
-  }else if(is.null(batch_train)){ # only the test set contain batches, no batch in training set
+  }else if(is.null(batch_train) & !is.null(batch_test)){ # only the test set contain batches, no batch in training set
     if(sep_cmb=="separate"){
       if(combat_mod=="mod"){
         # step 1
+        print("Step 1: test")
         tst_set <- ComBat(datLst$tst_x, batch=batch_test, mod=mod_test)
         
         # step 2
+        print("Step 2")
         batch_idx <- c(rep(1, ncol(datLst$trn_x)), rep(2, ncol(datLst$tst_x)))
         mod <- rbind(mod_train, mod_test); rownames(mod) <- 1:nrow(mod)
         combined_set <- ComBat(cbind(datLst$trn_x, tst_set), batch=batch_idx, mod=mod)
@@ -102,9 +114,11 @@ adjBatch <- function(
         datLst$tst_x <- combined_set[, (ncol(datLst$trn_x)+1):(ncol(datLst$trn_x)+ncol(datLst$tst_x))]
       }else if(combat_mod=="null"){
         # step 1
+        print("Step 1: test")
         tst_set <- ComBat(datLst$tst_x, batch=batch_test, mod=NULL)
         
         # step 2
+        print("Step 2")
         batch_idx <- c(rep(1, ncol(datLst$trn_x)), rep(2, ncol(datLst$tst_x)))
         combined_set <- ComBat(cbind(datLst$trn_x, tst_set), batch=batch_idx, mod=NULL)
         datLst$trn_x <- combined_set[, 1:ncol(datLst$trn_x)]
@@ -113,17 +127,18 @@ adjBatch <- function(
     }else if(sep_cmb=="combined"){
       if(combat_mod=="mod"){
         mod <- rbind(mod_train, mod_test); rownames(mod) <- 1:nrow(mod)
-        batch_idx <- c(rep((max(batch_test)+1), ncol(datLst$trn_x)), batch_test)
+        batch_idx <- c(rep(max(batch_test)+1, ncol(datLst$trn_x)), batch_test)
         combined_set <- ComBat(cbind(datLst$trn_x, datLst$tst_x), batch=batch_idx, mod=mod)
         datLst$trn_x <- combined_set[, 1:ncol(datLst$trn_x)]
         datLst$tst_x <- combined_set[, (ncol(datLst$trn_x)+1):(ncol(datLst$trn_x)+ncol(datLst$tst_x))]
       }else if(combat_mod=="null"){
-        batch_idx <- c(rep((max(batch_test)+1), ncol(datLst$trn_x)), batch_test)
+        batch_idx <- c(rep(max(batch_test)+1, ncol(datLst$trn_x)), batch_test)
         combined_set <- ComBat(cbind(datLst$trn_x, datLst$tst_x), batch=batch_idx, mod=NULL)
         datLst$trn_x <- combined_set[, 1:ncol(datLst$trn_x)]
         datLst$tst_x <- combined_set[, (ncol(datLst$trn_x)+1):(ncol(datLst$trn_x)+ncol(datLst$tst_x))]
       }
     }
   }
+  
   return(datLst)
 }
