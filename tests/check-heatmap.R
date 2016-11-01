@@ -1,4 +1,6 @@
 res_list <- baseLst
+#res_list <- baseBatch_Lst
+#res_list <- combatLst
 
 pal<- colorRampPalette(c("blue", "white", "orange"))(n = 16)
 dev.off()

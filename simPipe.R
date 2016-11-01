@@ -2,9 +2,9 @@ rm(list=ls())
 #setwd("C:/Users/zhang/Dropbox/Work/EvanJohnson/13_realdata_101816/batch_prediction_pipeline/")
 setwd("/restricted/projectnb/combat/batch_prediction_pipeline/")
 
-load("tests/command_args.RData")
-command_args=command_args2
-rm(command_args1, command_args2, command_args3, command_args4)
+# load("tests/command_args.RData")
+# command_args=command_args2
+# rm(command_args1, command_args2, command_args3, command_args4)
 
 source("scripts/modStats_new.R")
 source("scripts/baseDat.R")
@@ -15,7 +15,7 @@ source("scripts/helper.R")
 
 
 ######################## Set Parameters ########################
-#command_args <- commandArgs(trailingOnly=TRUE)
+command_args <- commandArgs(trailingOnly=TRUE)
 if (length(command_args) < 16){print("ERROR: At least 16 parameters!"); quit(save = "no", status = 1, runLast = FALSE)}
 
 
@@ -91,7 +91,7 @@ set.seed(1)
 
 ######################## Run pipeline ########################
 res_mat_trn <- res_mat_tst <- list()
-combatSets <- list()
+#combatSets <- list()
 for(iter in 1:iterations){
   print(paste("SIMULATION:",iter,sep=""))
   
@@ -262,8 +262,7 @@ for(iter in 1:iterations){
                                                                       "Weighted Majority")
   # baseSets[[iter]] <- baseLst
   # baseBatchSets[[iter]] <- baseBatch_Lst
-  combatSets[[iter]] <- combatLst
-  batchInfo <- batchLst
+  # combatSets[[iter]] <- combatLst
 }
 
 samples_batch_train <- conCat(cases_batch_train, controls_batch_train)
@@ -273,6 +272,6 @@ filename_seq <- c(withBatch, batch_meanvar_arg, sep_cmb, combat_mod,
                   n_batch_train, n_batch_test,
                   samples_batch_train, samples_batch_test)
 save(res_mat_tst, res_mat_trn,
-     #baseSets, baseBatchSets, 
-     combatSets, batchInfo, 
+     #baseSets, baseBatchSets, combatSets, 
+     batchLst, combatLst, 
      file=paste("results/", paste(filename_seq, collapse= "_"), ".RData", sep=""))

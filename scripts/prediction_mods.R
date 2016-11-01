@@ -184,7 +184,7 @@ predNnet <- function(
                          decay=10^seq(from=-3, to=-1, by=1))
   ctrl <- trainControl(method = "cv", number=10)
   mod_nnet <- train(x=t(trn_set), y=as.factor(y_trn), maxit=1000, MaxNWts = 10000,
-                    method="nnet", trace=FALSE,
+                    method="nnet", trace=TRUE,
                     trControl=ctrl,
                     tuneGrid=parGrid)
   pred_train_nnet <- predict(mod_nnet, t(trn_set), type="prob")[,"1"]
