@@ -4,7 +4,7 @@ setwd("/restricted/projectnb/combat/batch_prediction_pipeline/")
 
 # load("tests/command_args.RData")
 # command_args=command_args2
-# rm(command_args1, command_args2, command_args3, command_args4)
+# rm(command_args1, command_args2, command_args3, command_args4, command_args5)
 
 source("scripts/modStats_new.R")
 source("scripts/baseDat.R")

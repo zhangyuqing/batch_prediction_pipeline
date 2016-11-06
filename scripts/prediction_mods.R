@@ -233,3 +233,11 @@ predMas <- function(
   res <- list(pred_trn=pred_train_plusminus, pred_tst=pred_test_plusminus)
   return(res)
 }
+
+
+
+######## kTSP (k top scoring pairs) ########  
+# predkTSP <- function(){
+#   library(switchBox)
+#   
+# }
