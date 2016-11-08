@@ -1,6 +1,6 @@
 rm(list=ls())
 #setwd("C:/Users/zhang/Dropbox/Work/EvanJohnson/13_realdata_101816/batch_prediction_pipeline/")
-setwd("/restricted/projectnb/combat/batch_prediction_pipeline/")
+setwd("/restricted/projectnb/johnsonlab/yuqingz/batch_prediction_pipeline/")
 
 # load("tests/command_args.RData")
 # command_args=command_args2
@@ -255,7 +255,7 @@ for(iter in 1:iterations){
                                unlist(stats_knn_train), unlist(stats_rf_train),
                                unlist(stats_nnet_train), unlist(stats_mas_train),
                                unlist(stats_vote_train))
-  rownames(res_mat_tst[[iter]]) <- rownames(res_mat_trn [[iter]]) <- c("LASSO", "Elastic Net",
+  rownames(res_mat_tst[[iter]]) <- rownames(res_mat_trn[[iter]]) <- c("LASSO", "Elastic Net",
                                                                       "Naive Bayes", "SVM",
                                                                       "kNN", "Random Forest",
                                                                       "Neural Nets", "Mas-o-menos",

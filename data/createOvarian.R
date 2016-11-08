@@ -11,7 +11,7 @@ combat <- FALSE
 meta.required <- c("days_to_death", "vital_status", "batch") 
 min.number.of.genes <- 1000
 min.number.of.events <- 15
-min.sample.size <- 100
+min.sample.size <- 50
 
 ## create a list of ExpressionSets
 source(system.file("extdata", "createEsetList.R", package="curatedOvarianData"))

@@ -1,6 +1,6 @@
 rm(list=ls())
 #setwd("C:/Users/zhang/Dropbox/Work/EvanJohnson/13_realdata_101816/batch_prediction_pipeline/")
-setwd("/restricted/projectnb/combat/batch_prediction_pipeline/")
+setwd("/restricted/projectnb/johnsonlab/yuqingz/batch_prediction_pipeline/")
 
 # load("tests/command_args.RData")
 # command_args=command_args2

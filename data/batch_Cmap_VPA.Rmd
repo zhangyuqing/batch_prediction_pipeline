@@ -1,0 +1,154 @@
+---
+title: "Batch Effect in C-map data (VPA)"
+author: "Yuqing Zhang"
+date: "November 6, 2016"
+output: html_notebook
+---
+
+```{r, echo=FALSE}
+rm(list=ls())
+load("cmap_VPA.RData")
+library(ggplot2)
+```
+
+## PCA on whole VPA dataset
+
+```{r}
+VPA_pca <- prcomp(t(VPA_set), center=TRUE, scale=TRUE)
+qplot(VPA_pca$x[, 1], VPA_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main="Whole VPA dataset")
+```
+
+## Separate training and test set
+
+```{r}
+rm_ind <- which(batch %in% c("2", "33", "44", "56", "63", "70", "109"))
+dat <- VPA_set[, -rm_ind]
+response <- VPA_condition[-rm_ind]
+batch <- batch[-rm_ind]
+
+train_ind <- which(batch %in% c("506", "513", "602", "603", "626", "650"))
+test_ind <- which(batch %in% c("727", "725", "757", "750", "767", "765"))
+
+trn_x <- dat[, train_ind]
+trn_y <- response[train_ind]
+batch_train <- batch[train_ind]
+tst_x <- dat[, test_ind]
+tst_y <- response[test_ind]
+batch_test <- batch[test_ind]
+```
+
+## PCA on training and test set, before adjustment {.tabset}
+
+### training
+
+```{r}
+train_pca <- prcomp(t(trn_x), center=TRUE, scale=TRUE)
+qplot(train_pca$x[, 1], train_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main="VPA training set")
+```
+
+### test
+
+```{r}
+test_pca <- prcomp(t(tst_x), center=TRUE, scale=TRUE)
+qplot(test_pca$x[, 1], test_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main="VPA test set")
+```
+
+
+## Adjust data with ComBat
+
+```{r, echo=FALSE, message=FALSE}
+source("../scripts/adjBatch.R")
+baseBatch_Lst <- list(trn_x=trn_x, trn_y=trn_y, tst_x=tst_x, tst_y=tst_y)
+combat_sep_mod <- adjBatch(datLst=baseBatch_Lst, 
+                           batch_train=batch_train, batch_test=batch_test, 
+                           sep_cmb="separate", combat_mod="mod")
+combat_sep_hyb <- adjBatch(datLst=baseBatch_Lst, 
+                           batch_train=batch_train, batch_test=batch_test, 
+                           sep_cmb="separate", combat_mod="null")
+combat_cmb_mod <- adjBatch(datLst=baseBatch_Lst, 
+                           batch_train=batch_train, batch_test=batch_test, 
+                           sep_cmb="combined", combat_mod="mod")
+combat_cmb_null <- adjBatch(datLst=baseBatch_Lst, 
+                            batch_train=batch_train, batch_test=batch_test, 
+                            sep_cmb="combined", combat_mod="null")
+```
+
+
+## PCA on the adjusted data
+
+### 2-step with covariate {.tabset}
+
+#### training
+
+```{r}
+train_pca <- prcomp(t(combat_sep_mod$trn_x), center=TRUE, scale=TRUE)
+qplot(train_pca$x[, 1], train_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main="VPA training set")
+```
+
+#### test
+
+```{r}
+test_pca <- prcomp(t(combat_sep_mod$tst_x), center=TRUE, scale=TRUE)
+qplot(test_pca$x[, 1], test_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main="VPA test set")
+```
+
+
+### 2-step hybrid {.tabset}
+
+#### training
+
+```{r}
+train_pca <- prcomp(t(combat_sep_hyb$trn_x), center=TRUE, scale=TRUE)
+qplot(train_pca$x[, 1], train_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main="VPA training set")
+```
+
+#### test
+
+```{r}
+test_pca <- prcomp(t(combat_sep_hyb$tst_x), center=TRUE, scale=TRUE)
+qplot(test_pca$x[, 1], test_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main="VPA test set")
+```
+
+
+### 1-step with covariate {.tabset}
+
+#### training
+
+```{r}
+train_pca <- prcomp(t(combat_cmb_mod$trn_x), center=TRUE, scale=TRUE)
+qplot(train_pca$x[, 1], train_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main="VPA training set")
+```
+
+#### test
+
+```{r}
+test_pca <- prcomp(t(combat_cmb_mod$tst_x), center=TRUE, scale=TRUE)
+qplot(test_pca$x[, 1], test_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main="VPA test set")
+```
+
+### 1-step without covariate {.tabset}
+
+#### training
+
+```{r}
+train_pca <- prcomp(t(combat_cmb_null$trn_x), center=TRUE, scale=TRUE)
+qplot(train_pca$x[, 1], train_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main="VPA training set")
+```
+
+#### test
+
+```{r}
+test_pca <- prcomp(t(combat_cmb_null$tst_x), center=TRUE, scale=TRUE)
+qplot(test_pca$x[, 1], test_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main="VPA test set")
+```

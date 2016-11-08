@@ -1,0 +1,86 @@
+---
+title: "Batch Effect in curatedOvarianData"
+author: "Yuqing Zhang"
+date: "November 6, 2016"
+output: html_notebook
+---
+
+```{r, echo=FALSE}
+rm(list=ls())
+library(Biobase)
+load("ovarian.RData")
+library(ggplot2)
+```
+
+```{r}
+length(esets)
+names(esets)
+```
+
+## PCA on ovarian datasets {.tabset}
+
+### GSE14764
+
+```{r}
+eset_pca <- prcomp(t(exprs(esets[[1]])), center=TRUE, scale=TRUE)
+qplot(eset_pca$x[, 1], eset_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main=names(esets)[1])
+```
+
+### GSE18520
+
+```{r}
+eset_pca <- prcomp(t(exprs(esets[[2]])), center=TRUE, scale=TRUE)
+qplot(eset_pca$x[, 1], eset_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main=names(esets)[2])
+```
+
+### GSE26193
+
+```{r}
+eset_pca <- prcomp(t(exprs(esets[[3]])), center=TRUE, scale=TRUE)
+qplot(eset_pca$x[, 1], eset_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main=names(esets)[3])
+```
+
+### GSE26712
+
+```{r}
+eset_pca <- prcomp(t(exprs(esets[[4]])), center=TRUE, scale=TRUE)
+qplot(eset_pca$x[, 1], eset_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main=names(esets)[4])
+```
+
+### GSE30161
+
+```{r}
+eset_pca <- prcomp(t(exprs(esets[[5]])), center=TRUE, scale=TRUE)
+qplot(eset_pca$x[, 1], eset_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main=names(esets)[5])
+```
+
+### GSE9891
+
+```{r}
+eset_pca <- prcomp(t(exprs(esets[[6]])), center=TRUE, scale=TRUE)
+qplot(eset_pca$x[, 1], eset_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main=names(esets)[6])
+```
+
+### PMID17290060
+
+```{r}
+eset_pca <- prcomp(t(exprs(esets[[7]])), center=TRUE, scale=TRUE)
+qplot(eset_pca$x[, 1], eset_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main=names(esets)[7])
+```
+
+### TCGA
+
+```{r}
+eset_pca <- prcomp(t(exprs(esets[[8]])), center=TRUE, scale=TRUE)
+qplot(eset_pca$x[, 1], eset_pca$x[, 2],
+      xlab="PC1", ylab="PC2", main=names(esets)[8])
+```
+
+
