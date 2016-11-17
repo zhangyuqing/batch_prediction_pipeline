@@ -15,15 +15,15 @@ designDic = {1: "200 100 200 100 ",
              3: "200 100 200 100 ",
              4: "200 100 200 100 ",
              5: "200 40 200 140 "}
-batchDic = {1: "2 2 50 50 50 50 50 50 50 50",
-            2: "2 2 20 80 20 80 70 30 70 30",
-            3: "2 2 30 70 70 30 20 80 80 20",
-            4: "2 2 20 60 80 40 30 90 70 10",
-            5: "2 2 8 144 32 16 42 54 98 6"}
+batchDic = {1: "0 2 50 50 50 50",
+            2: "0 2 70 30 70 30",
+            3: "0 2 20 80 80 20",
+            4: "0 2 30 90 70 10",
+            5: "0 2 42 54 98 6"}
 
 designKey = sys.argv[1]
 dataKey = sys.argv[2]
 
-os.system("qsub -P johnsonlab -o logs/sim_" + designKey + "_" + dataKey + " -e logs/err_sim_" + designKey + "_" + dataKey + \
-          " -N sim_" + designKey + "_" + dataKey + \
+os.system("qsub -P johnsonlab -o logs/tst_" + designKey + "_" + dataKey + " -e logs/err_tst_" + designKey + "_" + dataKey + \
+          " -N tst_" + designKey + "_" + dataKey + \
           " -cwd -b y -pe omp 8 Rscript simPipe.R " + geneVec + designDic[int(designKey)] + dataDic[dataKey] + batchDic[int(designKey)])

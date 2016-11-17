@@ -24,5 +24,6 @@ batchDic = {1: "2 2 50 50 50 50 50 50 50 50",
 designKey = sys.argv[1]
 dataKey = sys.argv[2]
 
-os.system("qsub -P combat -o logs_meta/logs_" + designKey + "_" + dataKey + " -e logs_meta/logs_err_" + designKey + "_" + dataKey + " -N sim_" + designKey + "_" + dataKey + \
+os.system("qsub -P johnsonlab -o logs/meta_" + designKey + "_" + dataKey + " -e logs/err_meta_" + designKey + "_" + dataKey + \
+          " -N meta_" + designKey + "_" + dataKey + \
           " -cwd -b y -pe omp 8 Rscript simPipe_meta.R " + geneVec + designDic[int(designKey)] + dataDic[dataKey] + batchDic[int(designKey)])

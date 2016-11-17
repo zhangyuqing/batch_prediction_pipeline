@@ -127,4 +127,4 @@ names(res_mat_tst) <- names(res_mat_trn) <- c("Mas-o-menos", "Ridge", "Lasso",
 
 filename_seq <- c(dataname, sep_cmb, combat_mod, norm_ind)
 save(res_mat_tst, res_mat_trn, combatLst, 
-     file=paste("results/", paste(filename_seq, collapse= "_"), ".RData", sep=""))
+     file=paste("results/oval/", paste(filename_seq, collapse= "_"), ".RData", sep=""))

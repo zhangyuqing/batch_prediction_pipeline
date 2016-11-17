@@ -1,6 +1,6 @@
 rm(list=ls())
 #setwd("C:/Users/zhang/Documents/Work/Evan/predictive-models/100616-refine-pipeline/results")
-setwd("~/yuqingz_Evan/simPipe_100316/results/")
+setwd("/restricted/projectnb/johnsonlab/yuqingz/batch_prediction_pipeline/results/")
 
 source("../summaRes/loadStat.R")
 source("../summaRes/plotBox.R")
@@ -16,6 +16,7 @@ experiments_ID <- c("5_5_5_5_5_5", # balanced
                     "5_5_3_7_2_8", # batch %
                     "5_5_2_6_3_9", # batch size & %
                     "2_7_2_9_3_9") # all
+
 # prediction models
 method_names <- c("Lasso", "Elnet", "NaiveBayes", "SVM",
                   "kNN", "RandForest", "NeuralNets", "Mas-o-menos","WeightedVoting")

@@ -129,7 +129,7 @@ for(iter in 1:iterations){
   }
   
   
-  #### Step 3: Batch adjustment (Optional) and Partition training set by batch ####
+  #### Step 3: Adjust batch with ComBat ####
   if((!is.null(batchLst$batch_train)) & (!is.null(batchLst$batch_test))){
     batchLst$batch_test <- batchLst$batch_test + rep(max(batchLst$batch_train), length(batchLst$batch_test))
     names(batchLst$batch_ind_tst) <- as.numeric(names(batchLst$batch_ind_tst)) + rep(max(batchLst$batch_train), length(names(batchLst$batch_ind_tst)))
@@ -222,10 +222,10 @@ for(iter in 1:iterations){
                       res_nb$predres[[i]]$pred_tst, res_svm$predres[[i]]$pred_tst,
                       res_knn$predres[[i]]$pred_tst, res_rf$predres[[i]]$pred_tst,
                       res_nnet$predres[[i]]$pred_tst, res_mas$predres[[i]]$pred_tst)
-    weight_seq <- c(res_lasso$stats_test[[i]]$AUC, res_elnet$stats_test[[i]]$AUC,
-                    res_nb$stats_test[[i]]$AUC, res_svm$stats_test[[i]]$AUC,
-                    res_knn$stats_test[[i]]$AUC, res_rf$stats_test[[i]]$AUC,
-                    res_nnet$stats_test[[i]]$AUC, res_mas$stats_test[[i]]$AUC)
+    weight_seq <- c(res_lasso$stats_test[[i]]$accuracy, res_elnet$stats_test[[i]]$accuracy,
+                    res_nb$stats_test[[i]]$accuracy, res_svm$stats_test[[i]]$accuracy,
+                    res_knn$stats_test[[i]]$accuracy, res_rf$stats_test[[i]]$accuracy,
+                    res_nnet$stats_test[[i]]$accuracy, res_mas$stats_test[[i]]$accuracy)
     weight_seq <- weight_seq / sum(weight_seq)
     pred_test_vote[[i]] <- test_mat %*% weight_seq
     stats_vote_test[[i]] <- computeStats(pred_vec=pred_test_vote[[i]], true_label=y_tst, cutoff=0.5)
@@ -236,10 +236,10 @@ for(iter in 1:iterations){
                       res_nb$predres[[i]]$pred_trn, res_svm$predres[[i]]$pred_trn,
                       res_knn$predres[[i]]$pred_trn, res_rf$predres[[i]]$pred_trn,
                       res_nnet$predres[[i]]$pred_trn, res_mas$predres[[i]]$pred_trn)
-    weight_seq <- c(res_lasso$stats_train[[i]]$AUC, res_elnet$stats_train[[i]]$AUC,
-                    res_nb$stats_train[[i]]$AUC, res_svm$stats_train[[i]]$AUC,
-                    res_knn$stats_train[[i]]$AUC, res_rf$stats_train[[i]]$AUC,
-                    res_nnet$stats_train[[i]]$AUC, res_mas$stats_train[[i]]$AUC)
+    weight_seq <- c(res_lasso$stats_train[[i]]$accuracy, res_elnet$stats_train[[i]]$accuracy,
+                    res_nb$stats_train[[i]]$accuracy, res_svm$stats_train[[i]]$accuracy,
+                    res_knn$stats_train[[i]]$accuracy, res_rf$stats_train[[i]]$accuracy,
+                    res_nnet$stats_train[[i]]$accuracy, res_mas$stats_train[[i]]$accuracy)
     weight_seq <- weight_seq / sum(weight_seq)
     pred_train_vote[[i]] <- train_mat %*% weight_seq
     stats_vote_train[[i]] <- computeStats(pred_vec=pred_train_vote[[i]], true_label=y_trn_lst[[i]], cutoff=0.5)
@@ -256,10 +256,13 @@ for(iter in 1:iterations){
     meta_pred_test_vote <- apply(tmp, 1, mean)
     meta_stat_vote <- computeStats(pred_vec=meta_pred_test_vote, true_label=y_tst, cutoff=0.5)
   }
+  
   res_vote <- list(predres=predres_vote,
                    stats_train=stats_vote_train, stats_test=stats_vote_test,
                    meta_pred_test=meta_pred_test_vote,
                    meta_stat=meta_stat_vote)
+  print(sapply(res_vote$predres, length))
+  print(sapply(res_vote$predres[[2]], length))
 }
 
 samples_batch_train <- conCat(cases_batch_train, controls_batch_train)
@@ -271,4 +274,4 @@ filename_seq <- c(withBatch, batch_meanvar_arg, sep_cmb, combat_mod,
 save(res_lasso, res_elnet, res_nb, res_svm, 
      res_knn, res_rf, res_nnet, res_mas, res_vote,
      batchLst, combatLst, 
-     file=paste("results_meta/", paste(filename_seq, collapse= "_"), ".RData", sep=""))
+     file=paste("results/meta/", paste(filename_seq, collapse= "_"), ".RData", sep=""))

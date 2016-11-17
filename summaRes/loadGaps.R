@@ -22,42 +22,43 @@ computeGaps <- function(
 
 
 loadGaps <- function(
-  expID
+  expID,
   ## the design of experiment, exp 5_5_5_5_5_5
+  datadir
 ){
-  filenames <- dir()[grep(expID,dir())]
+  filenames <- dir(datadir)[grep(expID,dir(datadir))]
     
   # baseline
-  load(filenames[grep("FALSE_mean_none_none", filenames)])
+  load(paste(datadir, filenames[grep("FALSE_mean_none_none", filenames)], sep=""))
   baseline_gaps <- computeGaps(train_matlst=res_mat_trn, test_matlst=res_mat_tst)
   rm(res_mat_trn, res_mat_tst)
     
   # batch
-  load(filenames[grep("TRUE_mean_none_none", filenames)])
+  load(paste(datadir, filenames[grep("TRUE_mean_none_none", filenames)], sep=""))
   batch_gaps <- computeGaps(train_matlst=res_mat_trn, test_matlst=res_mat_tst)
   rm(res_mat_trn, res_mat_tst)
     
   # sep_mod
-  load(filenames[grep("TRUE_mean_separate_mod", filenames)])
+  load(paste(datadir, filenames[grep("TRUE_mean_separate_mod", filenames)], sep=""))
   sep_mod_gaps <- computeGaps(train_matlst=res_mat_trn, test_matlst=res_mat_tst)
   rm(res_mat_trn, res_mat_tst)
     
   # cmb_mod
-  load(filenames[grep("TRUE_mean_combined_mod", filenames)])
+  load(paste(datadir, filenames[grep("TRUE_mean_combined_mod", filenames)], sep=""))
   cmb_mod_gaps <- computeGaps(train_matlst=res_mat_trn, test_matlst=res_mat_tst)
   rm(res_mat_trn, res_mat_tst)
     
   # sep_hyb
-  load(filenames[grep("TRUE_mean_separate_null", filenames)])
+  load(paste(datadir, filenames[grep("TRUE_mean_separate_null", filenames)], sep=""))
   sep_hyb_gaps <- computeGaps(train_matlst=res_mat_trn, test_matlst=res_mat_tst)
   rm(res_mat_trn, res_mat_tst)
     
   # cmb_null
-  load(filenames[grep("TRUE_mean_combined_null", filenames)])
+  load(paste(datadir, filenames[grep("TRUE_mean_combined_null", filenames)], sep=""))
   cmb_null_gaps <- computeGaps(train_matlst=res_mat_trn, test_matlst=res_mat_tst)
   rm(res_mat_trn, res_mat_tst)
     
-  rm(baseSets, baseBatchSets, combatSets, batchInfo)
+  #rm(baseSets, baseBatchSets, combatSets, batchInfo)
   res <- list(baseline=baseline_gaps, batch=batch_gaps,
               sep_mod=sep_mod_gaps, sep_hyb=sep_hyb_gaps,
               cmb_mod=cmb_mod_gaps, cmb_null=cmb_null_gaps)

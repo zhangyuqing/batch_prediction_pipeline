@@ -16,7 +16,7 @@ predLasso <- function(
                       lambda=best_lambda)
   pred_train_logit <- predict(mod_logit, t(trn_set), type="response")
   pred_test_logit <-  predict(mod_logit, t(tst_set), type="response")
-  
+  # Type "response" gives the fitted probabilities for "binomial"
   res <- list(pred_trn=pred_train_logit, pred_tst=pred_test_logit)
   return(res)
 }
@@ -42,7 +42,7 @@ predElnet <- function(
                      tuneGrid=parGrid)
   pred_train_elnet <- predict(mod_elnet, t(trn_set), type="prob")[,"1"] 
   pred_test_elnet <- predict(mod_elnet, t(tst_set), type="prob")[,"1"] 
-  
+  # either "raw" or "prob", for the number/class predictions or class probabilities
   res <- list(pred_trn=pred_train_elnet, pred_tst=pred_test_elnet)
   return(res)
 }
@@ -62,7 +62,7 @@ predNB <- function(
   mod_nb <- naiveBayes(x=t(trn_set), y=as.factor(y_trn))
   pred_train_nb <- predict(mod_nb, t(trn_set), type="raw")[,"1"]
   pred_test_nb <- predict(mod_nb, t(tst_set), type="raw")[,"1"]
-
+  # If "raw", the conditional a-posterior probabilities for each class are returned
   res <- list(pred_trn=pred_train_nb, pred_tst=pred_test_nb)
   return(res)
 }
@@ -133,7 +133,7 @@ predKNN <- function(
   # response of training set, binary & numeric
 ){
   library(caret)
-  parGrid <- expand.grid(k=seq(from=1,to=150,by=1))
+  parGrid <- expand.grid(k=seq(from=1,to=50,by=1))
   ctrl <- trainControl(method = "cv", number=10)
   mod_knn <- train(x=t(trn_set), y=as.factor(y_trn), 
                      method="knn",

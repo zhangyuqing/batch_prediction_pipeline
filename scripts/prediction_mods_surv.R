@@ -105,15 +105,21 @@ predSuperPC <- function(
   superpc_train_data <- list(x=trn_set, y=y_trn[, 1], censoring.status=y_trn[, 2])
   superpc_test_data <- list(x=tst_set, y=y_tst[, 1], censoring.status=y_tst[, 2])
   mod_superpc <- superpc.train(data=superpc_train_data, type="survival")
-  obj <- superpc.cv(mod_superpc, data=superpc_train_data, n.components=1)
-  thres <- obj$thresholds[which(obj$scor==min(obj$scor))]
-  
-  obj_train <- superpc.predict(mod_superpc, data=superpc_train_data, 
-                               newdata=superpc_train_data, threshold=thres, n.components=1)
-  pred_train_superpc <- obj_train$v.pred[, 1]
-  obj_test <- superpc.predict(mod_superpc, data=superpc_train_data, 
-                              newdata=superpc_test_data, threshold=thres, n.components=1)
-  pred_test_superpc <- obj_test$v.pred[, 1]
+
+  # train
+  lrtrain.obj<-superpc.lrtest.curv(mod_superpc, data=superpc_train_data, newdata=superpc_train_data)
+  thres_train <- lrtrain.obj$threshold[which(lrtrain.obj$lrtest==max(lrtrain.obj$lrtest))[1]]
+  pred_train_lst <- superpc.predict(mod_superpc, data=superpc_train_data, 
+                                    newdata=superpc_train_data, threshold=thres_train, 
+                                    n.components=1)
+  pred_train_superpc <- pred_train_lst$v.pred[, 1]
+  # test
+  lrtest.obj<-superpc.lrtest.curv(mod_superpc, data=superpc_train_data, newdata=superpc_test_data)
+  thres_test <- lrtest.obj$threshold[which(lrtest.obj$lrtest==max(lrtest.obj$lrtest))[1]]
+  pred_test_lst <- superpc.predict(mod_superpc, data=superpc_train_data, 
+                                   newdata=superpc_test_data, threshold=thres_test, 
+                                   n.components=1)
+  pred_test_superpc <- pred_test_lst$v.pred[, 1]
   
   res <- list(pred_trn=pred_train_superpc, pred_tst=pred_test_superpc)
   return(res)

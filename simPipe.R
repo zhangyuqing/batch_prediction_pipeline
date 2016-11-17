@@ -91,7 +91,6 @@ set.seed(1)
 
 ######################## Run pipeline ########################
 res_mat_trn <- res_mat_tst <- list()
-#combatSets <- list()
 for(iter in 1:iterations){
   print(paste("SIMULATION:",iter,sep=""))
   
@@ -260,9 +259,6 @@ for(iter in 1:iterations){
                                                                       "kNN", "Random Forest",
                                                                       "Neural Nets", "Mas-o-menos",
                                                                       "Weighted Majority")
-  # baseSets[[iter]] <- baseLst
-  # baseBatchSets[[iter]] <- baseBatch_Lst
-  # combatSets[[iter]] <- combatLst
 }
 
 samples_batch_train <- conCat(cases_batch_train, controls_batch_train)
@@ -272,6 +268,5 @@ filename_seq <- c(withBatch, batch_meanvar_arg, sep_cmb, combat_mod,
                   n_batch_train, n_batch_test,
                   samples_batch_train, samples_batch_test)
 save(res_mat_tst, res_mat_trn,
-     #baseSets, baseBatchSets, combatSets, 
      batchLst, combatLst, 
-     file=paste("results/", paste(filename_seq, collapse= "_"), ".RData", sep=""))
+     file=paste("results/simulation/", paste(filename_seq, collapse= "_"), ".RData", sep=""))

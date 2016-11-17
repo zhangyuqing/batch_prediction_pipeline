@@ -5,11 +5,11 @@ date: "November 6, 2016"
 output: html_notebook
 ---
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, message=FALSE}
 rm(list=ls())
 library(Biobase)
-load("ovarian.RData")
 library(ggplot2)
+load("ovarian.RData")
 ```
 
 ```{r}
